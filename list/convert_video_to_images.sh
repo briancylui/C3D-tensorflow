@@ -26,6 +26,5 @@ do
             mkdir -p "${file[@]%.mp4}"
         fi
         ffmpeg -i "$file" -vf fps=$2 "${file[@]%.mp4}"/%05d.jpg
-        rm "$file"
     done
 done
