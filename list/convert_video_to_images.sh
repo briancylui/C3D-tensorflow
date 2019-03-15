@@ -15,14 +15,17 @@
 #       ~/document/videofile/walk/video1/00005.jpg
 #       ...
 
+# In our case: 
+#   sudo ./convert_video_to_images.sh ~/ucfcrimes/Videos fps
+
 for folder in $1/*
 do
-    for file in "$folder"/*.avi
+    for file in "$folder"/*.mp4
     do
-        if [[ ! -d "${file[@]%.avi}" ]]; then
-            mkdir -p "${file[@]%.avi}"
+        if [[ ! -d "${file[@]%.mp4}" ]]; then
+            mkdir -p "${file[@]%.mp4}"
         fi
-        ffmpeg -i "$file" -vf fps=$2 "${file[@]%.avi}"/%05d.jpg
+        ffmpeg -i "$file" -vf fps=$2 "${file[@]%.mp4}"/%05d.jpg
         rm "$file"
     done
 done
