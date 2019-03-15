@@ -25,6 +25,6 @@ do
         if [[ ! -d "${file[@]%.mp4}" ]]; then
             mkdir -p "${file[@]%.mp4}"
         fi
-        ffmpeg -i "$file" -vf fps=$2 "${file[@]%.mp4}"/%05d.jpg
+        ffmpeg -i "$file" -vf -f jpeg_pipe fps=$2 "${file[@]%.mp4}"/%05d.jpg
     done
 done
