@@ -29,15 +29,14 @@ do
     COUNT=$[$COUNT + 1]
     for video in "$folder"/*.mp4
     do
-        path=${video##*/ }
-        if grep "$path" ~/ucfcrimes/Anomaly_Detection_splits/Anomaly_Train.txt
+        if grep "${video##*/}" ~/ucfcrimes/Anomaly_Detection_splits/Anomaly_Train.txt
         then
-            echo "${path[@]%.mp4}" $COUNT >> train.list
-        elif grep "$path" ~/ucfcrimes/Anomaly_Detection_splits/Anomaly_Test.txt
+            echo "${video[@]%.mp4}" $COUNT >> train.list
+        elif grep "${video##*/}" ~/ucfcrimes/Anomaly_Detection_splits/Anomaly_Test.txt
         then
-            echo "${path[@]%.mp4}" $COUNT >> test.list
+            echo "${video[@]%.mp4}" $COUNT >> test.list
         else
-            echo "${path[@]%.mp4}" $COUNT >> none.list
+            echo "${video[@]%.mp4}" $COUNT >> none.list
         fi        
     done
 done
