@@ -21,6 +21,7 @@ from __future__ import print_function
 import os
 import PIL.Image as Image
 import numpy as np
+import shutil
 
 
 def resize_images(filename, resize_height=128, resize_width=171):
@@ -29,7 +30,16 @@ def resize_images(filename, resize_height=128, resize_width=171):
         line = lines[video_index].strip('\n').split()
         dirname = line[0]
         resized_dirname = dirname + '_resized'
-        os.mkdir(resized_dirname)
+        if os.path.exists(resized_dirname):
+            num_resized_frames = len([name for name in os.listdir(resized_dirname) if os.path.isfile(name)])
+            num_original_frames = len([name for name in os.listdir(dirname) if os.path.isfile(name)])
+            if num_resized_frames < num_original_frames:
+                shutil.rmtree(resized_dirname)
+                os.mkdir(resized_dirname)
+            else:
+                continue
+        else:
+            os.mkdir(resized_dirname)
         for parent, dirnames, filenames in os.walk(dirname):
             for filename in filenames:
                 image_name = os.path.join(parent, filename)
@@ -38,7 +48,7 @@ def resize_images(filename, resize_height=128, resize_width=171):
                 resized_image.save(os.path.join(resized_dirname, filename))
 
 if __name__ == '__main__':
-    resize_images('./list/test.list')
-    print('Done resizing video frames for testing')
+    # resize_images('./list/test.list')
+    # print('Done resizing video frames for testing')
     resize_images('./list/train.list')
     print('Done resizing video frames for testing')
