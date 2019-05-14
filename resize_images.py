@@ -24,7 +24,7 @@ import numpy as np
 
 
 def resize_images(filename, resize_height=128, resize_width=171):
-    lines = open(filename,'r')
+    lines = open(filename,'r').readlines()
     for video_index in range(len(lines)):
         line = lines[video_index].strip('\n').split()
         dirname = line[0]
