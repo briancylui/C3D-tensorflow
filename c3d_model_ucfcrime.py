@@ -82,6 +82,7 @@ def inference_c3d(_X, _dropout, batch_size, _weights, _biases):
   dense1 = tf.matmul(dense1, _weights['wd1']) + _biases['bd1']
 
   dense1 = tf.nn.relu(dense1, name='fc1') # Relu activation
+  '''
   dense1 = tf.nn.dropout(dense1, _dropout)
 
   dense2 = tf.nn.relu(tf.matmul(dense1, _weights['wd2']) + _biases['bd2'], name='fc2') # Relu activation
@@ -89,5 +90,6 @@ def inference_c3d(_X, _dropout, batch_size, _weights, _biases):
 
   # Output: class prediction
   out = tf.matmul(dense2, _weights['out']) + _biases['out']
+  '''
 
-  return out
+  return dense1
