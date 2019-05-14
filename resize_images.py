@@ -29,7 +29,7 @@ def resize_images(filename, resize_height=128, resize_width=171):
         line = lines[video_index].strip('\n').split()
         dirname = line[0]
         resized_dirname = dirname + '_resized'
-        os.makedir(resized_dirname)
+        os.mkdir(resized_dirname)
         for parent, dirnames, filenames in os.walk(dirname):
             for filename in filenames:
                 image_name = os.path.join(parent, filename)
