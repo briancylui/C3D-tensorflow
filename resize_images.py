@@ -47,6 +47,7 @@ def resize_images(filename, resize_height=128, resize_width=171):
                 image = Image.open(image_name)
                 resized_image = image.resize((resize_width, resize_height), Image.LANCZOS)
                 resized_image.save(os.path.join(resized_dirname, filename))
+        print('{}: {}'.format(video_index, resized_dirname))
 
 if __name__ == '__main__':
     # resize_images('./list/test.list')
