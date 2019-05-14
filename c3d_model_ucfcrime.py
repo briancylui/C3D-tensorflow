@@ -22,8 +22,8 @@ forward to make predictions.
 
 import tensorflow as tf
 
-# The UCF-101 dataset has 101 classes
-NUM_CLASSES = 101
+# The UCF-Crime dataset has 14 classes
+NUM_CLASSES = 14
 
 # Images are cropped to (CROP_SIZE, CROP_SIZE)
 CROP_SIZE = 112
