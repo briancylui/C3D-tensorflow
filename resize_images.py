@@ -33,10 +33,10 @@ def resize_images(filename, resize_height=128, resize_width=171, start_index=404
         dirname = line[0]
         resized_dirname = dirname + '_resized'
         if os.path.exists(resized_dirname):
-            time.sleep(3)
             num_resized_frames = len([name for name in os.listdir(resized_dirname)])
             num_original_frames = len([name for name in os.listdir(dirname)])
             if num_resized_frames < num_original_frames:
+                time.sleep(3)
                 shutil.rmtree(resized_dirname)
                 os.mkdir(resized_dirname)
             else:
