@@ -24,6 +24,7 @@ import numpy as np
 import shutil
 from tqdm import tqdm
 import time
+import subprocess
 
 
 def resize_images(filename, resize_height=128, resize_width=171, start_index=404):
@@ -32,13 +33,13 @@ def resize_images(filename, resize_height=128, resize_width=171, start_index=404
         line = lines[video_index].strip('\n').split()
         dirname = line[0]
         resized_dirname = dirname + '_resized'
+        
         if os.path.exists(resized_dirname):
             num_resized_frames = len([name for name in os.listdir(resized_dirname)])
             num_original_frames = len([name for name in os.listdir(dirname)])
             if num_resized_frames < num_original_frames:
-                time.sleep(3)
-                shutil.rmtree(resized_dirname)
-                os.mkdir(resized_dirname)
+                with open('tofix.txt', 'w') as f:
+                    tqdm.write(resized_dirname, file=f)
             else:
                 continue
         else:
