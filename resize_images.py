@@ -23,6 +23,7 @@ import PIL.Image as Image
 import numpy as np
 import shutil
 from tqdm import tqdm
+import time
 
 
 def resize_images(filename, resize_height=128, resize_width=171, start_index=404):
@@ -32,6 +33,7 @@ def resize_images(filename, resize_height=128, resize_width=171, start_index=404
         dirname = line[0]
         resized_dirname = dirname + '_resized'
         if os.path.exists(resized_dirname):
+            time.sleep(3)
             num_resized_frames = len([name for name in os.listdir(resized_dirname)])
             num_original_frames = len([name for name in os.listdir(dirname)])
             if num_resized_frames < num_original_frames:
