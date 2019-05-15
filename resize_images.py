@@ -40,8 +40,7 @@ def resize_images(filename, resize_height=128, resize_width=171, start_index=404
             if num_resized_frames < num_original_frames:
                 with open('tofix.txt', 'w') as f:
                     tqdm.write(resized_dirname, file=f)
-            else:
-                continue
+            continue
         else:
             os.mkdir(resized_dirname)
         for parent, dirnames, filenames in os.walk(dirname):
