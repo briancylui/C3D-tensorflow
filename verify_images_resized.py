@@ -36,7 +36,7 @@ def verify_images_resized(filename, resize_height=128, resize_width=171, start_i
             tqdm.write('Number of frames: {} = {} | resized = {}'.format(dirname, \
                 num_original_frames, num_resized_frames))
             continue
-        
+        '''
         for frame in os.listdir(resized_dirname):
             image_name = os.path.join(resized_dirname, frame)
             image = Image.open(image_name)
@@ -44,6 +44,7 @@ def verify_images_resized(filename, resize_height=128, resize_width=171, start_i
             if (width, height) != (resize_width, resize_height):
                 tqdm.write('{}: width = {} -> {} | height = {} -> {}'.format(dirname, \
                     resize_width, width, resize_height, height))
+        '''
 
 if __name__ == '__main__':
     verify_images_resized('./list/test.list')
