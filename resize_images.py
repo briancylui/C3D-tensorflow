@@ -25,9 +25,9 @@ import shutil
 from tqdm import tqdm
 
 
-def resize_images(filename, resize_height=128, resize_width=171):
+def resize_images(filename, resize_height=128, resize_width=171, start_index=404):
     lines = open(filename,'r').readlines()
-    for video_index in tqdm(range(len(lines))):
+    for video_index in tqdm(range(start_index, len(lines))):
         line = lines[video_index].strip('\n').split()
         dirname = line[0]
         resized_dirname = dirname + '_resized'
