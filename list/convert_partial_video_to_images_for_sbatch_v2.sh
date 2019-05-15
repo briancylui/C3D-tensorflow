@@ -18,14 +18,14 @@
 # In our case: 
 #   sudo ./convert_video_to_images.sh ~/ucfcrimes/Videos 30
 
-#SBATCH --partition=sc-quick --qos=normal
-#SBATCH --time=08:00:00
+#SBATCH --partition=deep --qos=normal
+#SBATCH --time=24:00:00
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
 
 # only use the following on partition with GPUs
-#SBATCH --gres=gpu:titanx:4
+#SBATCH --gres=gpu:4
 
 #SBATCH --job-name="sample"
 #SBATCH --output=ffmpeg-%j.out
