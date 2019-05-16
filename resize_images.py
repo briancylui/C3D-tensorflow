@@ -22,13 +22,17 @@ import sys
 
 def resize_images(filename, resize_height=128, resize_width=171, start_index=738, end_index=1610):
     lines = open(filename,'r').readlines()
-    for video_index in tqdm(range(start_index, len(lines))):
+    for video_index in tqdm(range(start_index, end_index)):
         line = lines[video_index].strip('\n').split()
         dirname = line[0]
         resized_dirname = dirname + '_resized'
         
         num_resized_frames = len([name for name in os.listdir(resized_dirname)])
-        if num_resized_frames == 0:
+        num_original_frames = len([name for name in os.listdir(dirname)])
+        if num_resized_frames < num_original_frames:
+            if num_resized_frames > 0:
+                shutil.rmtree(resized_dirname)
+                os.mkdir(resized_dirname)
             for parent, dirnames, filenames in os.walk(dirname):
                 for filename in filenames:
                     image_name = os.path.join(parent, filename)
