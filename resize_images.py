@@ -39,5 +39,5 @@ def resize_images(filename, resize_height=128, resize_width=171, start_index=738
 if __name__ == '__main__':
     # resize_images('./list/test.list')
     # print('Done resizing video frames for testing')
-    resize_images('./list/train.list', start_index=sys.argv[1], end_index=sys.argv[2])
+    resize_images('./list/train.list', start_index=int(sys.argv[1]), end_index=int(sys.argv[2]))
     print('Done resizing video frames for training')
