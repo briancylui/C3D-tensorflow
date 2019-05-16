@@ -18,10 +18,11 @@ import PIL.Image as Image
 import numpy as np
 import shutil
 from tqdm import tqdm
+import sys
 
-def resize_images(filename, resize_height=128, resize_width=171, end_index=404):
+def resize_images(filename, resize_height=128, resize_width=171, start_index=738, end_index=1610):
     lines = open(filename,'r').readlines()
-    for video_index in tqdm(range(end_index)):
+    for video_index in tqdm(range(start_index, len(lines))):
         line = lines[video_index].strip('\n').split()
         dirname = line[0]
         resized_dirname = dirname + '_resized'
@@ -36,7 +37,7 @@ def resize_images(filename, resize_height=128, resize_width=171, end_index=404):
                     resized_image.save(os.path.join(resized_dirname, filename))
 
 if __name__ == '__main__':
-    resize_images('./list/test.list')
-    print('Done resizing video frames for testing')
-    resize_images('./list/train.list')
+    # resize_images('./list/test.list')
+    # print('Done resizing video frames for testing')
+    resize_images('./list/train.list', start_index=sys.argv[1], end_index=sys.argv[2])
     print('Done resizing video frames for training')
