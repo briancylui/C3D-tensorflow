@@ -124,9 +124,11 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
     batch_size = clips.shape[0] // GPU_NUM
     for gpu_index in range(0, GPU_NUM):
         with tf.device('/gpu:%d' % gpu_index):
-            batch = images_placeholder[gpu_index * batch_size:(gpu_index + 1) * batch_size,:,:,:,:] \
-                    if gpu_index != GPU_NUM - 1 \
-                    else images_placeholder[gpu_index * batch_size:(gpu_index + 1) * batch_size,:,:,:,:]
+            if gpu_index != GPU_NUM - 1:
+                batch = images_placeholder[gpu_index * batch_size:(gpu_index + 1) * batch_size,:,:,:,:]
+            else:
+                batch = images_placeholder[gpu_index * batch_size:,:,:,:,:]
+                batch_size = batch.shape[0]
             
             cropped = tf.image.random_crop(batch, [batch_size, NUM_FRAMES_PER_CLIP, CROP_SIZE, CROP_SIZE, CHANNELS])
             cropped_zero_mean = tf.subtract(cropped, mean_placeholder)
@@ -159,6 +161,10 @@ def save_video_features(filename, num_segments_per_video=NUM_SEGMENTS_PER_VIDEO,
         line = lines[video_index].strip('\n').split()
         dirname = line[0]
         resized_dirname = dirname + '_resized'
+        feature_name = dirname + '.npy'
+
+        if os.path.exists(feature_name):
+            continue
 
         frames = os.listdir(resized_dirname)
         num_frames = len(frames)
@@ -173,7 +179,7 @@ def save_video_features(filename, num_segments_per_video=NUM_SEGMENTS_PER_VIDEO,
         video_features = np.concatenate(video_features) # (NUM_SEGMENTS_PER_VIDEO, 4096)
 
         # Saves feature
-        np.save(dirname + '.npy', video_features)
+        np.save(feature_name, video_features)
 
 if __name__ == '__main__':
     # Suppresses INFO print-out statements
