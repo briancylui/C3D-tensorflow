@@ -93,7 +93,7 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
         CLIP_INCREMENT)
 
     images_placeholder = tf.placeholder(tf.float32, shape=batch.shape)
-    with tf.variable_scope('var_name', reuse=True) as var_scope:
+    with tf.variable_scope('var_name', reuse=tf.AUTO_REUSE) as var_scope:
         weights = {
                 'wc1': _variable_with_weight_decay('wc1', [3, 3, 3, 3, 64], 0.04, 0.00),
                 'wc2': _variable_with_weight_decay('wc2', [3, 3, 3, 64, 128], 0.04, 0.00),
