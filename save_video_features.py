@@ -176,6 +176,9 @@ def save_video_features(filename, num_segments_per_video=NUM_SEGMENTS_PER_VIDEO,
         hf.create_dataset(dataset_key, data=video_features)
 
 if __name__ == '__main__':
+    # Suppresses INFO print-out statements
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
+
     for listname in LISTS:
         save_video_features(listname, start_index=int(sys.argv[1]), end_index=int(sys.argv[2]))
         print('Done saving features for videos in {}'.format(listname))
