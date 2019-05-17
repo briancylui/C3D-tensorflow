@@ -124,11 +124,7 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
     batch_size = clips.shape[0] // GPU_NUM
     for gpu_index in range(0, GPU_NUM):
         with tf.device('/gpu:%d' % gpu_index):
-            if gpu_index != GPU_NUM - 1:
-                batch = images_placeholder[gpu_index * batch_size:(gpu_index + 1) * batch_size,:,:,:,:]
-            else:
-                batch = images_placeholder[gpu_index * batch_size:,:,:,:,:]
-                batch_size = batch.shape[0]
+            batch = images_placeholder[gpu_index * batch_size:(gpu_index + 1) * batch_size,:,:,:,:]
             
             cropped = tf.image.random_crop(batch, [batch_size, NUM_FRAMES_PER_CLIP, CROP_SIZE, CROP_SIZE, CHANNELS])
             cropped_zero_mean = tf.subtract(cropped, mean_placeholder)
