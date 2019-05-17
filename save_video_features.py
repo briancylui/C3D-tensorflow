@@ -30,13 +30,15 @@ NUM_FRAMES_PER_CLIP = 16
 CLIP_INCREMENT = 8
 NUM_SEGMENTS_PER_VIDEO = 32
 GPU_NUM = 4
+CHANNELS = 3
 MODEL_NAME = './models/c3d_ucf101_finetune_whole_iter_20000_TF.model'
 model = c3d_model_ucfcrime
 FEATURE_FILE = './ucfcrime_c3d_features.h5'
 LISTS = ['./list/test.list']
 SEED = 171
 
-
+clip_mean = np.expand_dims(np.load('./crop_mean.npy').reshape([NUM_FRAMES_PER_CLIP, \
+    CROP_SIZE, CROP_SIZE, CHANNELS]), axis=0)
 
 def get_random_crop(image_np, crop_size=CROP_SIZE):
     height, width, channels = image_np.shape
@@ -89,10 +91,11 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
     if num_frames < num_frames_per_clip:
         return None
     
-    batch = get_image_batch_for_segment(video_path, frames_list, NUM_FRAMES_PER_CLIP, \
+    clips = get_image_batch_for_segment(video_path, frames_list, NUM_FRAMES_PER_CLIP, \
         CLIP_INCREMENT)
 
-    images_placeholder = tf.placeholder(tf.float32, shape=batch.shape)
+    images_placeholder = tf.placeholder(tf.float32, shape=clips.shape)
+    mean_placeholder = tf.placeholder(tf.float32, shape=clip_mean.shape)
     with tf.variable_scope('var_name', reuse=tf.AUTO_REUSE) as var_scope:
         weights = {
                 'wc1': _variable_with_weight_decay('wc1', [3, 3, 3, 3, 64], 0.04, 0.00),
@@ -118,16 +121,16 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
                 }
     
     features = []
-    batch_size = batch.shape[0] // GPU_NUM
+    batch_size = clips.shape[0] // GPU_NUM
     for gpu_index in range(0, GPU_NUM):
         with tf.device('/gpu:%d' % gpu_index):
-            if gpu_index != GPU_NUM - 1:
-                feature = model.inference_c3d(images_placeholder[gpu_index * \
-                    batch_size:(gpu_index + 1) * batch_size,:,:,:,:], \
-                        0.6, batch_size, weights, biases)
-            else:
-                feature = model.inference_c3d(images_placeholder[gpu_index * \
-                    batch_size:,:,:,:,:], 0.6, batch_size, weights, biases)
+            batch = images_placeholder[gpu_index * batch_size:(gpu_index + 1) * batch_size,:,:,:,:] \
+                    if gpu_index != GPU_NUM - 1 \
+                    else images_placeholder[gpu_index * batch_size:(gpu_index + 1) * batch_size,:,:,:,:]
+            
+            cropped = tf.image.random_crop(batch, [batch_size, NUM_FRAMES_PER_CLIP, CROP_SIZE, CROP_SIZE, CHANNELS])
+            cropped_zero_mean = tf.subtract(cropped, mean_placeholder)
+            feature = model.inference_c3d(cropped_zero_mean, 0.6, batch_size, weights, biases)
             features.append(feature) # (B / GPU_NUM, 4096)
     features = tf.concat(features, axis=0) # (B, 4096)
     features = tf.reduce_mean(features, axis=0) # (4096,)
@@ -142,7 +145,7 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
 
     segment_features = features.eval(
         session=sess,
-        feed_dict={images_placeholder: batch}
+        feed_dict={images_placeholder: clips, mean_placeholder: clip_mean}
         )
 
     return segment_features
