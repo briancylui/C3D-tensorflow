@@ -34,7 +34,7 @@ CHANNELS = 3
 MODEL_NAME = './models/c3d_ucf101_finetune_whole_iter_20000_TF.model'
 model = c3d_model_ucfcrime
 FEATURE_FILE = './ucfcrime_c3d_features.h5'
-LISTS = ['./list/test.list']
+LISTS = ['./list/train.list']
 SEED = 171
 
 clip_mean = np.expand_dims(np.load('./crop_mean.npy').reshape([NUM_FRAMES_PER_CLIP, \
