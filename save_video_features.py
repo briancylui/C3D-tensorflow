@@ -168,8 +168,12 @@ def save_video_features(filename, num_segments_per_video=NUM_SEGMENTS_PER_VIDEO,
             if segment_features is not None:
                 video_features.append(np.expand_dims(segment_features, axis=0)) # (1, 4096)
         video_features = np.concatenate(video_features) # (NUM_SEGMENTS_PER_VIDEO, 4096)
-        with h5py.File(FEATURE_FILE, 'w') as hf:
-            hf.create_dataset(resized_dirname, data=video_features)
+
+        # Saves feature
+        hf = h5py.File(FEATURE_FILE, 'w')
+        dir_chunks = resized_dirname.split('/')
+        dataset_key = '/'.join(dir_chunks[-2], dir_chunks[-1]) # e.g. Abuse/Abuse001_x264_resized
+        hf.create_dataset(dataset_key, data=video_features)
 
 if __name__ == '__main__':
     for listname in LISTS:
