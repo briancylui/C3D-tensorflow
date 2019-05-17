@@ -172,7 +172,7 @@ def save_video_features(filename, num_segments_per_video=NUM_SEGMENTS_PER_VIDEO,
         # Saves feature
         hf = h5py.File(FEATURE_FILE, 'w')
         dir_chunks = resized_dirname.split('/')
-        dataset_key = '/'.join(dir_chunks[-2], dir_chunks[-1]) # e.g. Abuse/Abuse001_x264_resized
+        dataset_key = '/'.join([dir_chunks[-2], dir_chunks[-1]]) # e.g. Abuse/Abuse001_x264_resized
         hf.create_dataset(dataset_key, data=video_features)
 
 if __name__ == '__main__':
