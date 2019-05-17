@@ -158,7 +158,7 @@ def save_video_features(filename, num_segments_per_video=NUM_SEGMENTS_PER_VIDEO,
 
         frames = os.listdir(resized_dirname)
         num_frames = len(frames)
-        num_frames_per_segment = num_frames / num_segments_per_video
+        num_frames_per_segment = num_frames // num_segments_per_video
         video_features = []
         for segment_index in range(num_segments_per_video):
             frames_list = frames[num_frames_per_segment * \
