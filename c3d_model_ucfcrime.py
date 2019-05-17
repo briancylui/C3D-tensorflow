@@ -45,8 +45,12 @@ def max_pool(name, l_input, k):
 
 def inference_c3d(_X, _dropout, batch_size, _weights, _biases):
 
+  # Random crop
+  _X_cropped = tf.image.random_crop(_X, [batch_size, \
+    NUM_FRAMES_PER_CLIP, CROP_SIZE, CROP_SIZE, CHANNELS])
+
   # Convolution Layer
-  conv1 = conv3d('conv1', _X, _weights['wc1'], _biases['bc1'])
+  conv1 = conv3d('conv1', _X_cropped, _weights['wc1'], _biases['bc1'])
   conv1 = tf.nn.relu(conv1, 'relu1')
   pool1 = max_pool('pool1', conv1, k=1)
 
