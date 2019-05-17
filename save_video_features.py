@@ -63,7 +63,8 @@ def _variable_with_weight_decay(name, shape, stddev, wd):
 def get_image_batch_for_segment(video_path, frames_list, num_frames_per_clip=NUM_FRAMES_PER_CLIP, \
     clip_increment=CLIP_INCREMENT):
     batch = []
-    num_clips = (num_frames - num_frames_per_clip) / clip_increment + 1
+    num_frames = len(frames_list)
+    num_clips = (num_frames - num_frames_per_clip) // clip_increment + 1
     for clip_index in range(0, num_clips):
         start_frame_index = clip_index * clip_increment
         clip = []
@@ -117,7 +118,7 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
                 }
     
     features = []
-    batch_size = batch.shape[0] / GPU_NUM
+    batch_size = batch.shape[0] // GPU_NUM
     for gpu_index in range(0, GPU_NUM):
         with tf.device('/gpu:%d' % gpu_index):
             if gpu_index != GPU_NUM - 1:
