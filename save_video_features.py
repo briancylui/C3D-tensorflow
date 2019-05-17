@@ -171,8 +171,13 @@ def save_video_features(filename, num_segments_per_video=NUM_SEGMENTS_PER_VIDEO,
         num_frames_per_segment = num_frames // num_segments_per_video
         video_features = []
         for segment_index in range(num_segments_per_video):
-            frames_list = frames[num_frames_per_segment * \
-                segment_index:num_frames_per_segment * (segment_index + 1)]
+            if num_frames_per_segment >= NUM_FRAMES_PER_CLIP:
+                frames_list = frames[num_frames_per_segment * \
+                    segment_index:num_frames_per_segment * (segment_index + 1)]
+            else:
+                frames_list = frames[num_frames_per_segment * \
+                    segment_index:num_frames_per_segment * segment_index + NUM_FRAMES_PER_CLIP]
+             
             segment_features = get_segment_features(resized_dirname, frames_list)
             if segment_features is not None:
                 video_features.append(np.expand_dims(segment_features, axis=0)) # (1, 4096)
