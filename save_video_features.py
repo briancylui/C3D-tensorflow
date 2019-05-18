@@ -36,7 +36,6 @@ MAX_BATCH_SIZE = MAX_BATCH_SIZE_PER_GPU * GPU_NUM
 MODEL_NAME = './models/c3d_ucf101_finetune_whole_iter_20000_TF.model'
 model = c3d_model_ucfcrime
 FEATURE_FILE = './ucfcrime_c3d_features.h5'
-LISTS = ['./list/train.list']
 SEED = 171
 
 clip_mean = np.expand_dims(np.load('./crop_mean.npy').reshape([NUM_FRAMES_PER_CLIP, \
@@ -237,6 +236,6 @@ if __name__ == '__main__':
     # Suppresses INFO print-out statements
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 
-    for listname in LISTS:
-        save_video_features(listname, start_index=int(sys.argv[1]), end_index=int(sys.argv[2]))
-        print('Done saving features for videos in {}'.format(listname))
+    save_video_features(sys.argv[1], start_index=int(sys.argv[2]), end_index=int(sys.argv[3]))
+    print('Done saving features for videos in {}'.format(listname))
+        
