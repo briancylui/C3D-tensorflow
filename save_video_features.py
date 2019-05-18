@@ -134,7 +134,7 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
     
     features = []
     
-    if batch_size == 0:
+    if num_clips_per_gpu == 0:
         with tf.device('/gpu:0'):
             batch = images_placeholder
             feature = forward_pass(batch, images_placeholder, mean_placeholder, weights, biases)
@@ -143,9 +143,9 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
         for gpu_index in range(0, GPU_NUM):
             with tf.device('/gpu:%d' % gpu_index):
                 if gpu_index != GPU_NUM - 1:
-                    batch = images_placeholder[gpu_index * batch_size:(gpu_index + 1) * batch_size,:,:,:,:]
+                    batch = images_placeholder[gpu_index * num_clips_per_gpu:(gpu_index + 1) * num_clips_per_gpu,:,:,:,:]
                 else:
-                    batch = images_placeholder[gpu_index * batch_size:,:,:,:,:]
+                    batch = images_placeholder[gpu_index * num_clips_per_gpu:,:,:,:,:]
                 
                 feature = forward_pass(batch, images_placeholder, mean_placeholder, weights, biases)
                 features.append(feature) # (B / GPU_NUM, 4096)
