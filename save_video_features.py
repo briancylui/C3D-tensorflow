@@ -31,6 +31,7 @@ CLIP_INCREMENT = 8
 NUM_SEGMENTS_PER_VIDEO = 32
 GPU_NUM = 4
 CHANNELS = 3
+MAX_BATCH_SIZE_PER_GPU = 50
 MODEL_NAME = './models/c3d_ucf101_finetune_whole_iter_20000_TF.model'
 model = c3d_model_ucfcrime
 FEATURE_FILE = './ucfcrime_c3d_features.h5'
@@ -84,6 +85,12 @@ def get_image_batch_for_segment(video_path, frames_list, num_frames_per_clip=NUM
 
     return batch
 
+def forward_pass(batch, images_placeholder, mean_placeholder, weights, biases):
+    cropped = tf.random_crop(batch, [batch.shape[0], NUM_FRAMES_PER_CLIP, CROP_SIZE, CROP_SIZE, CHANNELS])
+    cropped_zero_mean = tf.subtract(cropped, mean_placeholder)
+    feature = model.inference_c3d(cropped_zero_mean, 0.6, batch.shape[0], weights, biases)
+    return feature
+
 def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES_PER_CLIP, \
     clip_increment=CLIP_INCREMENT):
     clip_features = []
@@ -91,10 +98,15 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
     if num_frames < num_frames_per_clip:
         return None
     
-    clips = get_image_batch_for_segment(video_path, frames_list, NUM_FRAMES_PER_CLIP, \
-        CLIP_INCREMENT)
+    clips = get_image_batch_for_segment(video_path, frames_list)
+    num_clips_per_gpu = clips.shape[0] // GPU_NUM
+    num_full_rounds, last_round_batch_size = 0, num_clips_per_gpu
+    if num_clips_per_gpu > MAX_BATCH_SIZE_PER_GPU:
+        num_full_rounds = num_clips_per_gpu // MAX_BATCH_SIZE_PER_GPU
+        last_round_batch_size = num_clips_per_gpu % MAX_BATCH_SIZE_PER_GPU
 
-    images_placeholder = tf.placeholder(tf.float32, shape=clips.shape)
+    images_placeholder = tf.placeholder(tf.float32, shape=(None, NUM_FRAMES_PER_CLIP, \
+        clips.shape[2], clips.shape[3], CHANNELS))
     mean_placeholder = tf.placeholder(tf.float32, shape=clip_mean.shape)
     with tf.variable_scope('var_name', reuse=tf.AUTO_REUSE) as var_scope:
         weights = {
@@ -121,15 +133,12 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
                 }
     
     features = []
-    batch_size = clips.shape[0] // GPU_NUM
+    
     if batch_size == 0:
         with tf.device('/gpu:0'):
             batch = images_placeholder
-
-            cropped = tf.random_crop(batch, [batch.shape[0], NUM_FRAMES_PER_CLIP, CROP_SIZE, CROP_SIZE, CHANNELS])
-            cropped_zero_mean = tf.subtract(cropped, mean_placeholder)
-            feature = model.inference_c3d(cropped_zero_mean, 0.6, batch.shape[0], weights, biases)
-            features.append(feature) # (B / GPU_NUM, 4096)
+            feature = forward_pass(batch, images_placeholder, mean_placeholder, weights, biases)
+            features.append(feature) # (B / GPU_NUM, 4096)      
     else:
         for gpu_index in range(0, GPU_NUM):
             with tf.device('/gpu:%d' % gpu_index):
@@ -138,12 +147,10 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
                 else:
                     batch = images_placeholder[gpu_index * batch_size:,:,:,:,:]
                 
-                cropped = tf.random_crop(batch, [batch.shape[0], NUM_FRAMES_PER_CLIP, CROP_SIZE, CROP_SIZE, CHANNELS])
-                cropped_zero_mean = tf.subtract(cropped, mean_placeholder)
-                feature = model.inference_c3d(cropped_zero_mean, 0.6, batch.shape[0], weights, biases)
+                feature = forward_pass(batch, images_placeholder, mean_placeholder, weights, biases)
                 features.append(feature) # (B / GPU_NUM, 4096)
-    features = tf.concat(features, axis=0) # (B, 4096)
-    features = tf.reduce_mean(features, axis=0) # (4096,)
+    batch_features = tf.concat(features, axis=0) # (B, 4096)
+    mean_features = tf.reduce_mean(batch_features, axis=0) # (4096,)
 
     saver = tf.train.Saver()
     sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
@@ -153,10 +160,39 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
     # Create a saver for writing training checkpoints.
     saver.restore(sess, MODEL_NAME)
 
-    segment_features = features.eval(
-        session=sess,
-        feed_dict={images_placeholder: clips, mean_placeholder: clip_mean}
+    # Fast code path for small batch
+    if num_full_rounds == 0:
+        segment_features = mean_features.eval(
+            session=sess,
+            feed_dict={
+                images_placeholder: clips,
+                mean_placeholder: clip_mean
+                }
+            )
+        return segment_features
+
+    segment_features = []
+    for round_index in range(num_full_rounds):
+        round_features = batch_features.eval(
+            session=sess,
+            feed_dict={
+                images_placeholder: clips[round_index * MAX_BATCH_SIZE_PER_GPU:(round_index + 1) * \
+                    MAX_BATCH_SIZE_PER_GPU,:,:,:,:],
+                mean_placeholder: clip_mean
+                }
         )
+        segment_features.append(round_features)
+    if last_round_batch_size > 0:
+        round_features = batch_features.eval(
+            session=sess,
+            feed_dict={
+                images_placeholder: clips[-last_round_batch_size:,:,:,:,:],
+                mean_placeholder: clip_mean
+                }
+        )
+        segment_features.append(round_features)
+    segment_features = np.concatenate(segment_features)
+    segment_features = np.reduce_mean(segment_features, axis=0)
 
     return segment_features
 
