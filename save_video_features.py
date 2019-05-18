@@ -32,6 +32,7 @@ NUM_SEGMENTS_PER_VIDEO = 32
 GPU_NUM = 4
 CHANNELS = 3
 MAX_BATCH_SIZE_PER_GPU = 50
+MAX_BATCH_SIZE = MAX_BATCH_SIZE_PER_GPU * GPU_NUM
 MODEL_NAME = './models/c3d_ucf101_finetune_whole_iter_20000_TF.model'
 model = c3d_model_ucfcrime
 FEATURE_FILE = './ucfcrime_c3d_features.h5'
@@ -99,11 +100,12 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
         return None
     
     clips = get_image_batch_for_segment(video_path, frames_list)
-    num_clips_per_gpu = clips.shape[0] // GPU_NUM
-    num_full_rounds, last_round_batch_size = 0, num_clips_per_gpu
+    num_clips = clips.shape[0]
+    num_clips_per_gpu = num_clips // GPU_NUM
+    num_full_rounds, last_round_batch_size = 0, num_clips
     if num_clips_per_gpu > MAX_BATCH_SIZE_PER_GPU:
-        num_full_rounds = num_clips_per_gpu // MAX_BATCH_SIZE_PER_GPU
-        last_round_batch_size = num_clips_per_gpu % MAX_BATCH_SIZE_PER_GPU
+        num_full_rounds = num_clips // MAX_BATCH_SIZE
+        last_round_batch_size = num_clips % MAX_BATCH_SIZE
 
     images_placeholder = tf.placeholder(tf.float32, shape=(None, NUM_FRAMES_PER_CLIP, \
         clips.shape[2], clips.shape[3], CHANNELS))
@@ -134,7 +136,8 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
     
     features = []
     
-    if num_clips_per_gpu == 0:
+    num_clips_per_gpu_in_batch = images_placeholder.shape[0] // GPU_NUM
+    if num_clips_per_gpu_in_batch == 0:
         with tf.device('/gpu:0'):
             batch = images_placeholder
             feature = forward_pass(batch, images_placeholder, mean_placeholder, weights, biases)
@@ -143,9 +146,9 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
         for gpu_index in range(0, GPU_NUM):
             with tf.device('/gpu:%d' % gpu_index):
                 if gpu_index != GPU_NUM - 1:
-                    batch = images_placeholder[gpu_index * num_clips_per_gpu:(gpu_index + 1) * num_clips_per_gpu,:,:,:,:]
+                    batch = images_placeholder[gpu_index * num_clips_per_gpu_in_batch:(gpu_index + 1) * num_clips_per_gpu_in_batch,:,:,:,:]
                 else:
-                    batch = images_placeholder[gpu_index * num_clips_per_gpu:,:,:,:,:]
+                    batch = images_placeholder[gpu_index * num_clips_per_gpu_in_batch:,:,:,:,:]
                 
                 feature = forward_pass(batch, images_placeholder, mean_placeholder, weights, biases)
                 features.append(feature) # (B / GPU_NUM, 4096)
@@ -176,8 +179,8 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
         round_features = batch_features.eval(
             session=sess,
             feed_dict={
-                images_placeholder: clips[round_index * MAX_BATCH_SIZE_PER_GPU:(round_index + 1) * \
-                    MAX_BATCH_SIZE_PER_GPU,:,:,:,:],
+                images_placeholder: clips[round_index * MAX_BATCH_SIZE:(round_index + 1) * \
+                    MAX_BATCH_SIZE,:,:,:,:],
                 mean_placeholder: clip_mean
                 }
         )
