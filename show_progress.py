@@ -13,4 +13,4 @@ for line in lines:
     if status == 'R':
         tail_command = "tail -1 save-" + job_id + ".out"
         output = check_output(tail_command.split())
-        print(output)
+        print('{}: {}'.format(job_id, output))
