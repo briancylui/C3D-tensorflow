@@ -1,7 +1,7 @@
 import subprocess
 
 queue_command = "squeue | grep brianlui"
-output = subprocess.check_output(queue_command.split(), stdout=subprocess.PIPE)
+output = subprocess.check_output(queue_command.split())
 print(output)
 
 lines = output.strip().splitlines()
