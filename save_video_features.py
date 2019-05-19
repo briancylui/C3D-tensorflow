@@ -157,7 +157,7 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
 
     saver = tf.train.Saver()
     config = tf.ConfigProto(allow_soft_placement=True)
-    config.gpu_options.allow_growth = True
+    # config.gpu_options.allow_growth = True
     sess = tf.Session(config=config)
     init = tf.global_variables_initializer()
     sess.run(init)
