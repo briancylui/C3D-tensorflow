@@ -145,8 +145,6 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
         images_for_all_gpus = tf.reshape(images_placeholder, \
             shape=[GPU_NUM, -1, clips.shape[2], clips.shape[2], CHANNELS])
         images_per_gpu = tf.split(images_for_all_gpus, GPU_NUM)
-        last_gpu_batch_size = tf.shape(image_placeholder)[0] % GPU_NUM + tf.shape(image_placeholder)[0]
-        split_tensors = tf.split(images_placeholder[:-last_gpu_batch_size,:,:,:,:], GPU_NUM - 1)
         for gpu_index in range(0, GPU_NUM):
             with tf.device('/gpu:%d' % gpu_index):
                 batch = images_per_gpu[gpu_index][0]
