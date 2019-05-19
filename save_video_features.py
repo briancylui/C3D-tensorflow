@@ -86,9 +86,9 @@ def get_image_batch_for_segment(video_path, frames_list, num_frames_per_clip=NUM
     return batch
 
 def forward_pass(batch, images_placeholder, mean_placeholder, weights, biases):
-    cropped = tf.random_crop(batch, [batch.shape[0], NUM_FRAMES_PER_CLIP, CROP_SIZE, CROP_SIZE, CHANNELS])
+    cropped = tf.random_crop(batch, [tf.shape(batch)[0], NUM_FRAMES_PER_CLIP, CROP_SIZE, CROP_SIZE, CHANNELS])
     cropped_zero_mean = tf.subtract(cropped, mean_placeholder)
-    feature = model.inference_c3d(cropped_zero_mean, 0.6, batch.shape[0], weights, biases)
+    feature = model.inference_c3d(cropped_zero_mean, 0.6, tf.shape(batch)[0], weights, biases)
     return feature
 
 def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES_PER_CLIP, \
