@@ -212,6 +212,7 @@ def save_video_features(filename, num_segments_per_video=NUM_SEGMENTS_PER_VIDEO,
         if os.path.exists(feature_name):
             continue
 
+        tqdm.write(resized_dirname)
         frames = os.listdir(resized_dirname)
         num_frames = len(frames)
         num_frames_per_segment = num_frames // num_segments_per_video
