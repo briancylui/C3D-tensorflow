@@ -7,7 +7,10 @@ print(grep_output)
 
 lines = grep_output.strip().splitlines()
 for line in lines:
-    job_id = line.split()[0]
-    tail_command = "tail -1 save-" + job_id + ".out"
-    output = check_output(tail_command.split())
-    print(output)
+    items = line.split()
+    job_id = items[0]
+    status = items[4]
+    if status == 'R':
+        tail_command = "tail -1 save-" + job_id + ".out"
+        output = check_output(tail_command.split())
+        print(output)
