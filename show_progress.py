@@ -1,12 +1,13 @@
 import subprocess
 
-queue_command = "squeue | grep brianlui"
-output = subprocess.check_output(queue_command.split(), shell=True)
-print(output)
+queue_command = "squeue"
+queue_output = subprocess.check_output(['squeue'])
+grep_output = subprocess.check_output(['grep', 'brianlui'], stdin=queue_output)
+print(grep_output)
 
-lines = output.strip().splitlines()
+lines = grep_output.strip().splitlines()
 for line in lines:
     job_id = line.split()[0]
     tail_command = "tail -1 save-" + job_id + ".out"
-    output = subprocess.check_output(tail_command.split(), stdout=subprocess.PIPE)
+    output = subprocess.check_output(tail_command.split())
     print(output)
