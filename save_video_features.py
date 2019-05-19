@@ -163,7 +163,9 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
     mean_features = tf.reduce_mean(batch_features, axis=0) # (4096,)
 
     saver = tf.train.Saver()
-    sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True, allow_growth=True))
+    config = tf.ConfigProto(allow_soft_placement=True)
+    config.gpu_options.allow_growth = True
+    sess = tf.Session(config=config)
     init = tf.global_variables_initializer()
     sess.run(init)
 
