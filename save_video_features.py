@@ -135,20 +135,21 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
     
     features = []
     
-    num_clips_per_gpu_in_batch = images_placeholder.shape[0] // GPU_NUM
+    num_clips_per_gpu_in_batch = tf.shape(image_placeholder)[0] // GPU_NUM
     if num_clips_per_gpu_in_batch == 0:
         with tf.device('/gpu:0'):
             batch = images_placeholder
             feature = forward_pass(batch, images_placeholder, mean_placeholder, weights, biases)
             features.append(feature) # (B / GPU_NUM, 4096)      
     else:
+        images_for_all_gpus = tf.reshape(images_placeholder, \
+            shape=[GPU_NUM, -1, clips.shape[2], clips.shape[2], CHANNELS])
+        images_per_gpu = tf.split(images_for_all_gpus, GPU_NUM)
+        last_gpu_batch_size = tf.shape(image_placeholder)[0] % GPU_NUM + tf.shape(image_placeholder)[0]
+        split_tensors = tf.split(images_placeholder[:-last_gpu_batch_size,:,:,:,:], GPU_NUM - 1)
         for gpu_index in range(0, GPU_NUM):
             with tf.device('/gpu:%d' % gpu_index):
-                if gpu_index != GPU_NUM - 1:
-                    batch = images_placeholder[gpu_index * num_clips_per_gpu_in_batch:(gpu_index + 1) * num_clips_per_gpu_in_batch,:,:,:,:]
-                else:
-                    batch = images_placeholder[gpu_index * num_clips_per_gpu_in_batch:,:,:,:,:]
-                
+                batch = images_per_gpu[gpu_index][0]
                 feature = forward_pass(batch, images_placeholder, mean_placeholder, weights, biases)
                 features.append(feature) # (B / GPU_NUM, 4096)
     batch_features = tf.concat(features, axis=0) # (B, 4096)
