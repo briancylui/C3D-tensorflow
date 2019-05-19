@@ -106,12 +106,6 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
         num_full_rounds = num_clips // MAX_BATCH_SIZE
         last_round_batch_size = num_clips % MAX_BATCH_SIZE
 
-    tqdm.write('num_frames: {}'.format(num_frames))
-    tqdm.write('num_clips: {}'.format(num_clips))
-    tqdm.write('num_clips_per_gpu: {}'.format(num_clips_per_gpu))
-    tqdm.write('num_full_rounds: {}'.format(num_full_rounds))
-    tqdm.write('last_round_batch_size: {}'.format(last_round_batch_size))
-
     images_placeholder = tf.placeholder(tf.float32, shape=(None, NUM_FRAMES_PER_CLIP, \
         clips.shape[2], clips.shape[3], CHANNELS))
     mean_placeholder = tf.placeholder(tf.float32, shape=clip_mean.shape)
@@ -142,7 +136,6 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
     features = []
     
     num_clips_per_gpu_in_batch = tf.shape(images_placeholder)[0] // GPU_NUM
-    tqdm.write('num_clips_per_gpu_in_batch: {}'.format(num_clips_per_gpu_in_batch))
 
     if num_full_rounds == 0 and num_clips // GPU_NUM == 0:
         with tf.device('/gpu:0'):
@@ -231,7 +224,6 @@ def save_video_features(filename, num_segments_per_video=NUM_SEGMENTS_PER_VIDEO,
         if os.path.exists(feature_name):
             continue
 
-        tqdm.write(resized_dirname)
         frames = os.listdir(resized_dirname)
         num_frames = len(frames)
         num_frames_per_segment = num_frames // num_segments_per_video
