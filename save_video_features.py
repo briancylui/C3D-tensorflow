@@ -241,6 +241,9 @@ def save_video_features(filename, num_segments_per_video=NUM_SEGMENTS_PER_VIDEO,
             segment_features = get_segment_features(resized_dirname, frames_list)
             if segment_features is not None:
                 video_features.append(np.expand_dims(segment_features, axis=0)) # (1, 4096)
+        if not videos_features:
+            tqdm.write('Empty video: video_index = {}, dirname = {}'.format(video_index, dirname))
+            continue
         video_features = np.concatenate(video_features) # (NUM_SEGMENTS_PER_VIDEO, 4096)
 
         # Saves feature
