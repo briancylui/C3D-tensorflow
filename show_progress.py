@@ -1,8 +1,8 @@
-import subprocess
+from subprocess import PIPE, STDOUT, Popen, check_output
 
-queue_command = "squeue"
-queue_output = subprocess.check_output(['squeue'])
-grep_output = subprocess.check_output(['grep', 'brianlui'], stdin=queue_output)
+pipe = Popen(['grep', 'brianlui'], stdout=PIPE, stdin=PIPE, stderr=STDOUT)
+queue_output = check_output(['squeue'])
+grep_output = pipe.communicate(input=queue_output)[0]
 print(grep_output)
 
 lines = grep_output.strip().splitlines()
