@@ -194,7 +194,7 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
         )
         segment_features.append(round_features)
     segment_features = np.concatenate(segment_features)
-    segment_features = np.reduce_mean(segment_features, axis=0)
+    segment_features = np.mean(segment_features, axis=0)
 
     return segment_features
 
