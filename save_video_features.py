@@ -220,9 +220,11 @@ def save_video_features(filename, num_segments_per_video=NUM_SEGMENTS_PER_VIDEO,
             if num_frames_per_segment >= NUM_FRAMES_PER_CLIP:
                 frames_list = frames[num_frames_per_segment * \
                     segment_index:num_frames_per_segment * (segment_index + 1)]
-            else:
+            elif num_frames_per_segment * segment_index + NUM_FRAMES_PER_CLIP <= num_frames:
                 frames_list = frames[num_frames_per_segment * \
                     segment_index:num_frames_per_segment * segment_index + NUM_FRAMES_PER_CLIP]
+            else:
+                frames_list = frames[-NUM_FRAMES_PER_CLIP:]
              
             segment_features = get_segment_features(resized_dirname, frames_list)
             if segment_features is not None:
