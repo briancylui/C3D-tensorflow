@@ -106,6 +106,12 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
         num_full_rounds = num_clips // MAX_BATCH_SIZE
         last_round_batch_size = num_clips % MAX_BATCH_SIZE
 
+    tqdm.write('num_frames: {}'.format(num_frames))
+    tqdm.write('num_clips: {}'.format(num_clips))
+    tqdm.write('num_clips_per_gpu: {}'.format(num_clips_per_gpu))
+    tqdm.write('num_full_rounds: {}'.format(num_full_rounds))
+    tqdm.write('last_round_batch_size: {}'.format(last_round_batch_size))
+
     images_placeholder = tf.placeholder(tf.float32, shape=(None, NUM_FRAMES_PER_CLIP, \
         clips.shape[2], clips.shape[3], CHANNELS))
     mean_placeholder = tf.placeholder(tf.float32, shape=clip_mean.shape)
@@ -136,7 +142,9 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
     features = []
     
     num_clips_per_gpu_in_batch = tf.shape(images_placeholder)[0] // GPU_NUM
-    if num_clips_per_gpu_in_batch == 0:
+    tqdm.write('num_clips_per_gpu_in_batch: {}'.format(num_clips_per_gpu_in_batch))
+
+    if num_full_rounds == 0 and num_clips // GPU_NUM == 0:
         with tf.device('/gpu:0'):
             batch = images_placeholder
             feature = forward_pass(batch, mean_placeholder, weights, biases)
@@ -155,7 +163,7 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
     mean_features = tf.reduce_mean(batch_features, axis=0) # (4096,)
 
     saver = tf.train.Saver()
-    sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
+    sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True, allow_growth=True))
     init = tf.global_variables_initializer()
     sess.run(init)
 
@@ -173,18 +181,27 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
             )
         return segment_features
 
+    # Whatever follows assumes num_full_rounds >= 1
     segment_features = []
+
     for round_index in range(num_full_rounds):
+        start_index = round_index * MAX_BATCH_SIZE
+        
+        if round_index == num_full_rounds - 1 and last_round_batch_size < GPU_NUM:
+            end_index = num_clips
+        else:
+            end_index = (round_index + 1) * MAX_BATCH_SIZE
+
         round_features = batch_features.eval(
             session=sess,
             feed_dict={
-                images_placeholder: clips[round_index * MAX_BATCH_SIZE:(round_index + 1) * \
-                    MAX_BATCH_SIZE,:,:,:,:],
+                images_placeholder: clips[start_index:end_index,:,:,:,:],
                 mean_placeholder: clip_mean
                 }
         )
         segment_features.append(round_features)
-    if last_round_batch_size > 0:
+
+    if last_round_batch_size >= GPU_NUM:
         round_features = batch_features.eval(
             session=sess,
             feed_dict={
