@@ -135,7 +135,7 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
     
     features = []
     
-    num_clips_per_gpu_in_batch = tf.shape(image_placeholder)[0] // GPU_NUM
+    num_clips_per_gpu_in_batch = tf.shape(images_placeholder)[0] // GPU_NUM
     if num_clips_per_gpu_in_batch == 0:
         with tf.device('/gpu:0'):
             batch = images_placeholder
