@@ -237,5 +237,5 @@ if __name__ == '__main__':
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 
     save_video_features(sys.argv[1], start_index=int(sys.argv[2]), end_index=int(sys.argv[3]))
-    print('Done saving features for videos in {}'.format(listname))
+    print('Done saving features for videos in {}'.format(sys.argv[1]))
         
