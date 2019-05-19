@@ -85,7 +85,7 @@ def get_image_batch_for_segment(video_path, frames_list, num_frames_per_clip=NUM
 
     return batch
 
-def forward_pass(batch, images_placeholder, mean_placeholder, weights, biases):
+def forward_pass(batch, mean_placeholder, weights, biases):
     cropped = tf.random_crop(batch, [tf.shape(batch)[0], NUM_FRAMES_PER_CLIP, CROP_SIZE, CROP_SIZE, CHANNELS])
     cropped_zero_mean = tf.subtract(cropped, mean_placeholder)
     feature = model.inference_c3d(cropped_zero_mean, 0.6, tf.shape(batch)[0], weights, biases)
@@ -139,16 +139,21 @@ def get_segment_features(video_path, frames_list, num_frames_per_clip=NUM_FRAMES
     if num_clips_per_gpu_in_batch == 0:
         with tf.device('/gpu:0'):
             batch = images_placeholder
-            feature = forward_pass(batch, images_placeholder, mean_placeholder, weights, biases)
+            feature = forward_pass(batch, mean_placeholder, weights, biases)
             features.append(feature) # (B / GPU_NUM, 4096)      
     else:
-        images_for_all_gpus = tf.reshape(images_placeholder, \
+        # images_for_all_gpus = tf.reshape(images_placeholder, \
             shape=[GPU_NUM, -1, NUM_FRAMES_PER_CLIP, clips.shape[2], clips.shape[2], CHANNELS])
-        images_per_gpu = tf.split(images_for_all_gpus, GPU_NUM)
+        # images_per_gpu = tf.split(images_for_all_gpus, GPU_NUM)
         for gpu_index in range(0, GPU_NUM):
             with tf.device('/gpu:%d' % gpu_index):
-                batch = images_per_gpu[gpu_index][0]
-                feature = forward_pass(batch, images_placeholder, mean_placeholder, weights, biases)
+                # batch = images_per_gpu[gpu_index][0]
+                if gpu_index != GPU - 1:
+                    batch = images_placeholder[gpu_index * num_clips_per_gpu_in_batch:(gpu_index + 1) * \
+                        num_clips_per_gpu_in_batch,:,:,:,:]
+                else:
+                    batch = images_placeholder[gpu_index * num_clips_per_gpu_in_batch:,:,:,:,:]
+                feature = forward_pass(batch, mean_placeholder, weights, biases)
                 features.append(feature) # (B / GPU_NUM, 4096)
     batch_features = tf.concat(features, axis=0) # (B, 4096)
     mean_features = tf.reduce_mean(batch_features, axis=0) # (4096,)
