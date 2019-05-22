@@ -11,7 +11,7 @@ with open('./list/train.list', 'r') as f:
         feature_list.append(video_features)
 
 features = np.concatenate(feature_list)
-np.save('train_features.npy')
+np.save(features, 'train_features.npy')
 
 feature_list = []
 with open('./list/test.list', 'r') as f:
@@ -22,4 +22,4 @@ with open('./list/test.list', 'r') as f:
         feature_list.append(video_features)
 
 features = np.concatenate(feature_list)
-np.save('test_features.npy')
+np.save(features, 'test_features.npy')
