@@ -72,11 +72,11 @@ def get_image_batch_for_segment(video_path, frames_list, num_frames_per_clip=NUM
         start_frame_index = clip_index * clip_increment
         clip = []
         for frame_index in range(start_frame_index, start_frame_index + num_frames_per_clip):
-            image = Image.open(os.path.join(video_path, frames_list[frame_index]))
-            image_np = np.array(image) # image.size (W, H) -> image_data.shape (H, W, C)
-            # Randomly crop image_np (H, W, C) into (crop_size, crop_size, C)
-            # image_cropped = get_random_crop(image_np)
-            clip.append(np.expand_dims(image_np, axis=0)) # (H, W, C) -> (1, H, W, C)
+            with Image.open(os.path.join(video_path, frames_list[frame_index])) as image:
+                image_np = np.array(image) # image.size (W, H) -> image_data.shape (H, W, C)
+                # Randomly crop image_np (H, W, C) into (crop_size, crop_size, C)
+                # image_cropped = get_random_crop(image_np)
+                clip.append(np.expand_dims(image_np, axis=0)) # (H, W, C) -> (1, H, W, C)
         clip = np.concatenate(clip) # (F, H, W, C)
         # Optional: Horizontally flip the entire clip w.p. 50% by uncommenting:
         # if np.random.random() < 0.5: clip = np.flip(clip, axis=2)
