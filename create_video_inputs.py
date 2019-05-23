@@ -9,7 +9,7 @@ with open('./list/train.list', 'r') as f:
     for line in tqdm(lines):
         dirname = line.split()[0]
         video_features = np.load(dirname + '.npy')
-        video_features = np.mean(video_features, axis=0)
+        video_features = np.mean(video_features, axis=0, keepdims=True)
         feature_list.append(video_features)
 
 features = np.concatenate(feature_list)
@@ -21,7 +21,7 @@ with open('./list/test.list', 'r') as f:
     for line in tqdm(lines):
         dirname = line.split()[0]
         video_features = np.load(dirname + '.npy')
-        video_features = np.mean(video_features, axis=0)
+        video_features = np.mean(video_features, axis=0, keepdims=True)
         feature_list.append(video_features)
 
 features = np.concatenate(feature_list)
